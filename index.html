@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Vencimientos</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--primary:#1553D6;--pp:#0F3FA8;--tint:#EAF1FF;--bg:#F5F7FA;--surface:#fff;--border:#E3E8EF;--ink:#0F1B2D;--ink2:#5B6676;--ink3:#98A2B3;--red:#D92D20}
+.s-over{--s:#D92D20;--b:#FEF3F2;--t:#B42318}.s-soon{--s:#F79009;--b:#FFFAEB;--t:#B54708}.s-ok{--s:#12B76A;--b:#ECFDF3;--t:#067647}.s-none{--s:#98A2B3;--b:#F2F4F7;--t:#475467}
+*{box-sizing:border-box;margin:0;font-family:Inter,system-ui,-apple-system,Roboto,sans-serif;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;background:var(--bg);color:var(--ink);font-size:16px;line-height:24px}
+#app{max-width:480px;margin:0 auto;height:100dvh;display:flex;flex-direction:column;position:relative;background:var(--bg);padding-top:env(safe-area-inset-top,0)}
+.num{font-variant-numeric:tabular-nums}
+button{border:0;background:none;cursor:pointer;color:inherit;font-size:15px;font-weight:600}
+.top{height:56px;flex:none;display:flex;align-items:center;gap:8px;padding:0 16px;background:var(--surface);border-bottom:1px solid var(--border)}
+.top h1{font-size:18px;line-height:26px;font-weight:600;flex:1}
+.ib{width:48px;height:48px;display:grid;place-items:center;border-radius:12px;margin:0 -8px}
+main{flex:1;overflow-y:auto;padding:16px 16px 96px}
+h2{font-size:24px;line-height:32px;font-weight:700}h3{font-size:18px;line-height:26px;font-weight:600}
+.sec{font-size:14px;line-height:20px;color:var(--ink2)}.cap{font-size:12px;line-height:16px;color:var(--ink2)}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;height:52px;border-radius:12px;font-size:15px;font-weight:600}
+.btn.p{background:var(--primary);color:#fff}.btn.p:active{background:var(--pp)}.btn.s{border:1px solid var(--border);background:var(--surface);color:var(--ink)}
+.btn.t{color:var(--primary);height:48px}.btn.d{color:#B42318;height:48px;font-size:14px}.btn.r{background:var(--red);color:#fff}
+.btn:disabled{opacity:.45;cursor:not-allowed}.btn.sm{height:40px;font-size:14px;margin-top:12px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:14px;box-shadow:0 1px 2px rgba(15,27,45,.06);padding:16px;margin-bottom:12px}
+.vc{display:block;width:100%;text-align:left;font-weight:400;border-left:4px solid var(--s)}
+.row{display:flex;align-items:center;gap:8px}.sp{justify-content:space-between}
+.chip{display:inline-flex;align-items:center;gap:4px;height:24px;padding:0 10px;border-radius:999px;background:var(--b);color:var(--t);font-size:12px;font-weight:600;white-space:nowrap}
+.plate{display:inline-block;border:1.5px solid var(--ink);background:#fff;border-radius:6px;padding:4px 10px;font-weight:700;font-size:15px;line-height:20px;letter-spacing:.08em;text-transform:uppercase}
+.sum{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+.sc{border-radius:14px;padding:12px 8px;text-align:center;background:var(--b);color:var(--t);border:2px solid transparent;min-height:72px}
+.sc b{display:block;font-size:28px;line-height:32px;font-weight:700}.sc span{font-size:12px;font-weight:600}
+.sc.z{background:var(--n-b,#F2F4F7);color:#475467}.sc.on{border-color:var(--t)}
+.band{background:var(--tint);border-radius:12px;padding:10px 12px;font-size:14px;margin-bottom:12px;display:block;width:100%;text-align:left;color:var(--primary);font-weight:600}
+.ban{background:#FFFAEB;color:#B54708;border-radius:12px;padding:12px;font-size:14px;margin-bottom:12px}.ban button{color:#B54708;text-decoration:underline;font-size:14px;margin-top:4px;display:block}
+.fab{position:absolute;right:16px;bottom:calc(64px + 16px + env(safe-area-inset-bottom,0));height:52px;border-radius:26px;background:var(--primary);color:#fff;padding:0 20px;display:flex;align-items:center;gap:8px;box-shadow:0 1px 2px rgba(15,27,45,.2);z-index:5}
+.nav{flex:none;height:calc(64px + env(safe-area-inset-bottom,0));padding-bottom:env(safe-area-inset-bottom,0);background:var(--surface);border-top:1px solid var(--border);display:flex}
+.nav button{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:12px;color:var(--ink2)}.nav button.on{color:var(--primary)}
+.fld{margin-bottom:16px}.fld label{display:block;font-size:14px;font-weight:600;margin-bottom:6px}
+input,select{width:100%;height:52px;border-radius:12px;border:1px solid var(--border);padding:0 14px;font-size:16px;background:#fff;color:var(--ink)}
+input:focus,select:focus{outline:0;border:2px solid var(--primary);box-shadow:0 0 0 4px var(--tint);padding:0 13px}
+input.bad{border:1px solid var(--red)}.err{color:#B42318;font-size:12px;line-height:16px;margin-top:4px}
+.seg{display:flex;background:var(--n-b,#F2F4F7);border-radius:12px;padding:3px;height:44px;margin:24px 0}
+.seg button{flex:1;border-radius:10px;color:var(--ink2)}.seg button.on{background:#fff;color:var(--ink);box-shadow:0 1px 2px rgba(15,27,45,.12)}
+.logo{width:48px;height:48px;border-radius:12px;background:var(--primary);color:#fff;display:grid;place-items:center;margin-bottom:12px}
+.circ{width:96px;height:96px;border-radius:50%;background:var(--tint);color:var(--primary);display:grid;place-items:center;margin:0 auto 24px}
+.ctr{text-align:center}.pad{padding:24px 16px;overflow-y:auto;flex:1}
+.tc{display:inline-flex;align-items:center;height:48px;padding:0 16px;border-radius:999px;border:1px solid var(--border);background:#fff;margin:0 8px 8px 0;font-size:15px}
+.tc.on{background:var(--tint);border-color:var(--primary);color:var(--primary);font-weight:600}
+.ic{width:40px;height:40px;border-radius:10px;display:grid;place-items:center;background:var(--b);color:var(--t);flex:none}
+.bar{height:8px;border-radius:4px;background:var(--border);overflow:hidden;margin-top:12px}.bar i{display:block;height:100%;background:var(--primary)}.bar.am i{background:#F79009}
+.pl{display:block;width:100%;text-align:left;font-weight:400}.pl.on{border:2px solid var(--primary);padding:15px}
+.pl ul{list-style:none;padding:0;margin-top:8px;font-size:14px;color:var(--ink2)}
+#ov{display:none;position:fixed;inset:0;z-index:20}#ov.on{display:block}
+.bd{position:absolute;inset:0;background:rgba(15,27,45,.45)}
+.sh{position:absolute;left:50%;transform:translateX(-50%);bottom:0;width:100%;max-width:480px;background:#fff;border-radius:20px 20px 0 0;padding:20px 16px calc(16px + env(safe-area-inset-bottom,0));max-height:92dvh;overflow-y:auto;animation:up .18s ease-out}
+.md{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:calc(100% - 32px);max-width:400px;background:#fff;border-radius:14px;padding:24px 16px 8px;text-align:center}
+@keyframes up{from{transform:translate(-50%,24px);opacity:0}}
+#toast{position:fixed;left:50%;bottom:calc(88px + env(safe-area-inset-bottom,0));transform:translateX(-50%);background:var(--ink);color:#fff;padding:12px 16px;border-radius:12px;font-size:14px;z-index:30;max-width:calc(100% - 32px);opacity:0;pointer-events:none;transition:opacity .18s}
+#toast.on{opacity:1}.ld{margin:auto;color:var(--ink2)}
+.spin{width:18px;height:18px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:r .7s linear infinite}@keyframes r{to{transform:rotate(1turn)}}
+.fixb{position:absolute;left:0;right:0;bottom:calc(64px + env(safe-area-inset-bottom,0));padding:12px 16px;background:var(--bg);display:grid;gap:8px;border-top:1px solid var(--border)}
+</style></head>
+<body><div id="app"><div class="ld">Cargando…</div></div><div id="ov"></div><div id="toast"></div>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging-compat.js"></script>
+<script>
+/* ============================================================
+   >>> ACÁ PEGÁS TUS CLAVES DE FIREBASE <<<
+   Consola Firebase > Configuración del proyecto > Tus apps > Web > firebaseConfig
+   ============================================================ */
+const CONFIG={
+  firebase:{
+    apiKey:"PEGAR_AQUI",
+    authDomain:"PEGAR_AQUI",
+    projectId:"PEGAR_AQUI",
+    storageBucket:"PEGAR_AQUI",
+    messagingSenderId:"PEGAR_AQUI",
+    appId:"PEGAR_AQUI"
+  },
+  adminUid:"PEGAR_AQUI_TU_UID",           // tu UID de Firebase (Authentication > Usuarios), para ver el panel Admin
+  vapidKey:"PEGAR_AQUI_CLAVE_WEB_PUSH",   // Configuración > Cloud Messaging > Certificados web push
+  whatsapp:"5491100000000",               // tu WhatsApp, con código de país, sin + ni espacios
+  alias:"TU.ALIAS.AQUI", cbu:"0000000000000000000000",
+  mpLinks:{f5:"",f15:""}                  // links de pago de Mercado Pago por plan
+};
+/* ============================================================ */
+firebase.initializeApp(CONFIG.firebase);
+const auth=firebase.auth(),db=firebase.firestore();
+const LIM={free:2,f5:5,f15:15},PN={free:'Gratis',f5:'Flota 5',f15:'Flota 15'};
+const DUE=[['vtv','VTV','clip'],['seguro','Seguro','shield'],['patente','Patente','file'],['service','Service','wrench'],['custom','Personalizado','cal']];
+const TYPES=['Auto','Utilitario','Camioneta','Moto','Camión'];
+const I={clip:'<rect width="8" height="4" x="8" y="2" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="m9 14 2 2 4-4"/>',
+shield:'<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/>',
+file:'<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4M10 9H8M16 13H8M16 17H8"/>',
+wrench:'<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>',
+cal:'<path d="M21 7.5V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3.5M16 2v4M8 2v4M3 10h5"/><circle cx="16" cy="16" r="6"/><path d="M16 14v2l1 1"/>',
+bell:'<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>',
+bellok:'<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="m9 11 2 2 3-3"/>',
+chev:'<path d="m9 18 6-6-6-6"/>',pen:'<path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>',back:'<path d="m12 19-7-7 7-7M19 12H5"/>',
+gear:'<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9 7 7M17 17l2.1 2.1M4.9 19.1 7 17M17 7l2.1-2.1"/>',
+car:'<path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><path d="M9 17h6"/><circle cx="17" cy="17" r="2"/>',
+plus:'<path d="M12 5v14M5 12h14"/>',lock:'<rect width="18" height="11" x="3" y="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>',
+chk:'<path d="M20 6 9 17l-5-5"/>',dots:'<circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/>',
+over:'<circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/>',soon:'<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>',
+ok:'<circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/>',none:'<circle cx="12" cy="12" r="10"/><path d="M8 12h8"/>',
+users:'<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>',
+eye:'<path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/>'};
+const ico=(n,s=20)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="flex:none">${I[n]}</svg>`;
+const $=s=>document.querySelector(s),ov=$('#ov');
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let S={u:null,d:null,v:[],scr:'auth',tab:'veh',f:null,vid:null,mode:'in',sel:null,ready:false,creating:false,busy:false};
+let unsubs=[];
+
+/* ---------- utilidades ---------- */
+function toast(m){const t=$('#toast');t.textContent=m;t.className='on';clearTimeout(toast.t);toast.t=setTimeout(()=>t.className='',3000)}
+function errMsg(e){const m={'auth/invalid-email':'Ese mail no parece válido.','auth/missing-password':'Escribí tu contraseña.','auth/invalid-credential':'Mail o contraseña incorrectos.','auth/wrong-password':'Mail o contraseña incorrectos.','auth/user-not-found':'Mail o contraseña incorrectos.','auth/email-already-in-use':'Ese mail ya tiene cuenta. ¿Querés ingresar?','auth/weak-password':'La contraseña tiene que tener al menos 6 caracteres.','auth/too-many-requests':'Demasiados intentos. Probá de nuevo en unos minutos.','auth/network-request-failed':'No hay conexión. Revisá internet y probá de nuevo.','unavailable':'No hay conexión. Revisá internet y probá de nuevo.','permission-denied':'No tenés permiso para hacer eso.'};
+return m[e&&e.code]||'Algo salió mal. Probá de nuevo.'}
+const todayD=()=>{const n=new Date();return new Date(n.getFullYear(),n.getMonth(),n.getDate())};
+const dleft=s=>{const[y,m,d]=s.split('-').map(Number);return Math.round((new Date(y,m-1,d)-todayD())/864e5)};
+const MES=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+const fdate=s=>{const[y,m,d]=s.split('-').map(Number);return `${d} ${MES[m-1]} ${y}`};
+const iso=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+const plusYear=()=>{const d=todayD();d.setFullYear(d.getFullYear()+1);return iso(d)};
+const stOf=n=>n==null?'none':n<0?'over':n<=30?'soon':'ok';
+const SL={over:'Vencido',soon:'Por vencer',ok:'Al día',none:'Sin fecha'};
+const chip=(st,t)=>`<span class="chip s-${st}">${ico(st,12)}${esc(t||SL[st])}</span>`;
+const fplate=p=>{p=String(p||'').toUpperCase();let m=p.match(/^([A-Z]{2})(\d{3})([A-Z]{2})$/)||p.match(/^([A-Z]{3})(\d{3})$/);return m?m.slice(1).join(' '):p};
+const cleanPlate=s=>String(s||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
+const dname=(v,k)=>k==='custom'?(v.customName||'Personalizado'):DUE.find(x=>x[0]===k)[1];
+function vs(v){let b=null;for(const[k]of DUE){const s=v.due&&v.due[k];if(!s)continue;const n=dleft(s);if(!b||n<b.n)b={k,n}}
+return b?{st:stOf(b.n),n:b.n,k:b.k}:{st:'none',n:Infinity,k:null}}
+const plural=n=>n===1?'día':'días';
+function dueText(v,s){if(!s.k)return 'Sin fechas cargadas';const nm=dname(v,s.k);
+return s.n<0?`${nm} · vencida hace ${-s.n} ${plural(-s.n)}`:s.n===0?`${nm} · vence hoy`:`${nm} · vence en ${s.n} ${plural(s.n)}`}
+const cd=n=>n<0?`Vencida hace ${-n} d`:n===0?'Vence hoy':`En ${n} d`;
+const plan=()=>(S.d&&S.d.plan)||'free';
+const uref=()=>db.doc('users/'+S.u.uid);
+const vcol=()=>db.collection('users/'+S.u.uid+'/vehicles');
+const curV=()=>S.v.find(v=>v.id===S.vid);
+
+/* ---------- sesión y datos ---------- */
+auth.onAuthStateChanged(u=>{
+  unsubs.forEach(f=>f());unsubs=[];S.u=u;S.d=null;S.v=[];
+  if(!u){S.scr='auth';S.ready=true;R();return}
+  S.ready=false;R();
+  unsubs.push(uref().onSnapshot(sn=>{
+    if(!sn.exists){if(!S.creating)uref().set({email:u.email,plan:'free',planPending:null,reminderHour:9,permAsked:true,fcmTokens:[]}).catch(e=>toast(errMsg(e)));return}
+    S.d=sn.data();S.ready=true;
+    if(S.d.permAsked===false&&S.scr!=='detail')S.scr='perm';
+    else if(S.scr==='auth'||(S.scr==='perm'&&S.d.permAsked!==false))S.scr='main';
+    R()},e=>{S.ready=true;toast(errMsg(e));R()}));
+  unsubs.push(vcol().onSnapshot(sn=>{S.v=sn.docs.map(d=>({id:d.id,...d.data()}));if(S.scr==='detail'&&!curV())S.scr='main';R()},e=>toast(errMsg(e))));
+});
+
+/* ---------- render ---------- */
+function R(){const a=$('#app');
+  if(!S.ready){a.innerHTML='<div class="ld">Cargando…</div>';return}
+  a.innerHTML=S.scr==='auth'?vAuth():S.scr==='perm'?vPerm():S.scr==='detail'?vDetail():S.scr==='admin'?vAdmin():S.tab==='plan'?vPlan():vPanel()}
+const nav=()=>`<nav class="nav"><button class="${S.tab==='veh'?'on':''}" onclick="S.tab='veh';R()">${ico('car',24)}Vehículos</button><button class="${S.tab==='plan'?'on':''}" onclick="S.tab='plan';R()">${ico('chk',24)}Plan</button></nav>`;
+
+/* Login / registro */
+function fld(id,l,t,ph,extra=''){return `<div class="fld"><label for="${id}">${l}</label><input id="${id}" type="${t}" placeholder="${ph||''}" ${extra}><div class="err" id="e_${id}"></div></div>`}
+function vAuth(){const up=S.mode==='up';
+return `<div class="pad"><div class="ctr"><div class="logo" style="margin:0 auto 12px">${ico('bellok',28)}</div><h2>Vencimientos</h2><p class="sec">Que no se te pase ningún vencimiento.</p></div>
+<div class="seg"><button class="${up?'':'on'}" onclick="S.mode='in';R()">Ingresar</button><button class="${up?'on':''}" onclick="S.mode='up';R()">Crear cuenta</button></div>
+<form onsubmit="return doAuth(event)" novalidate>${fld('em','Email','email','vos@mail.com','autocomplete="email" inputmode="email"')}
+<div class="fld"><label for="pw">Contraseña</label><div style="position:relative"><input id="pw" type="password" autocomplete="${up?'new-password':'current-password'}"><button type="button" class="ib" style="position:absolute;right:0;top:2px;margin:0" aria-label="Mostrar contraseña" onclick="const p=$('#pw');p.type=p.type==='password'?'text':'password'">${ico('eye')}</button></div><div class="err" id="e_pw"></div></div>
+${up?fld('pw2','Repetir contraseña','password','','autocomplete="new-password"'):''}
+<button class="btn p" id="go" type="submit">${up?'Crear cuenta gratis':'Ingresar'}</button></form>
+${up?'':'<button class="btn t" onclick="forgot()">Olvidé mi contraseña</button>'}
+<p class="cap ctr" style="margin-top:24px">Al continuar aceptás los términos y la política de privacidad.</p></div>`}
+function fe(id,m){const e=$('#e_'+id),i=$('#'+id);if(e)e.textContent=m||'';if(i)i.classList.toggle('bad',!!m)}
+async function doAuth(ev){ev.preventDefault();if(S.busy)return false;
+  const em=$('#em').value.trim(),pw=$('#pw').value,up=S.mode==='up';let ok=true;
+  ['em','pw','pw2'].forEach(i=>fe(i,''));
+  if(!/^\S+@\S+\.\S+$/.test(em)){fe('em','Escribí un mail válido.');ok=false}
+  if(pw.length<6){fe('pw','La contraseña tiene que tener al menos 6 caracteres.');ok=false}
+  if(up&&pw!==$('#pw2').value){fe('pw2','Las contraseñas no coinciden.');ok=false}
+  if(!ok)return false;
+  S.busy=true;const b=$('#go');b.disabled=true;b.innerHTML='<span class="spin"></span>';
+  try{if(up){S.creating=true;const c=await auth.createUserWithEmailAndPassword(em,pw);
+      await db.doc('users/'+c.user.uid).set({email:em,plan:'free',planPending:null,reminderHour:9,permAsked:false,fcmTokens:[]});S.creating=false}
+    else await auth.signInWithEmailAndPassword(em,pw)}
+  catch(e){S.creating=false;const m=errMsg(e);fe(e.code==='auth/email-already-in-use'||e.code==='auth/invalid-email'?'em':'pw',m);
+    b.disabled=false;b.textContent=up?'Crear cuenta gratis':'Ingresar'}
+  S.busy=false;return false}
+async function forgot(){const em=$('#em').value.trim();if(!/^\S+@\S+\.\S+$/.test(em)){fe('em','Escribí tu mail acá y volvé a tocar “Olvidé mi contraseña”.');return}
+  try{await auth.sendPasswordResetEmail(em);toast('Listo. Te mandamos un mail para crear otra contraseña.')}catch(e){toast(errMsg(e))}}
+
+/* Permiso de notificaciones */
+function vPerm(){return `<div class="top" style="background:none;border:0;justify-content:flex-end"><button class="btn t" style="width:auto" onclick="askNotif(false)">Ahora no</button></div>
+<div class="pad ctr"><div class="circ">${ico('bell',40)}</div><h2>Que el celu te avise por vos</h2><p class="sec" style="margin:8px 0 24px">Te mandamos un aviso 30, 7 y 1 día antes de cada vencimiento.</p>
+<div style="text-align:left">${[['30 días antes: tiempo de sobra'],['7 días antes: hora de sacar turno'],['1 día antes: último aviso']].map(r=>`<div class="row card" style="padding:12px">${ico('bell')}<span>${r[0]}</span></div>`).join('')}</div></div>
+<div style="padding:16px"><button class="btn p" onclick="askNotif(true)">Activar avisos</button></div>`}
+async function askNotif(yes){
+  try{if(yes){if(!('Notification'in window))toast('Este navegador no permite avisos. Probá desde Chrome o Safari instalada en la pantalla de inicio.');
+    else{const p=await Notification.requestPermission();
+      if(p==='granted'&&await firebase.messaging.isSupported()){const reg=await navigator.serviceWorker.register('firebase-messaging-sw.js');
+        const t=await firebase.messaging().getToken({vapidKey:CONFIG.vapidKey,serviceWorkerRegistration:reg});
+        await uref().update({fcmTokens:firebase.firestore.FieldValue.arrayUnion(t)})}}}
+  }catch(e){toast('No pudimos activar los avisos. Probá de nuevo desde Ajustes del celular.')}
+  try{await uref().update({permAsked:true})}catch(e){S.scr='main';R()}}
+const denied=()=>'Notification'in window&&Notification.permission==='denied';
+function howTo(){sheet(`<h3>Cómo activar los avisos</h3><p class="sec" style="margin:8px 0 16px">Abrí los Ajustes del celular, buscá este navegador o app, entrá en Notificaciones y activalas. Después volvé y recargá la página.</p><button class="btn p" onclick="closeS()">Entendido</button>`)}
+
+/* Panel semáforo */
+function vPanel(){
+  const L=S.v.map(v=>({v,s:vs(v)})).sort((a,b)=>a.s.n===b.s.n?0:a.s.n<b.s.n?-1:1);
+  const c={over:0,soon:0,ok:0};L.forEach(x=>{if(c[x.s.st]!==undefined)c[x.s.st]++});
+  const lim=LIM[plan()],full=S.v.length>=lim&&plan()==='free';
+  const shown=S.f?L.filter(x=>x.s.st===S.f):L;
+  return `<div class="top"><h1>Mis vehículos</h1>${isAdmin()?`<button class="ib" aria-label="Admin" onclick="loadAdmin()">${ico('users')}</button>`:''}<button class="ib" aria-label="Ajustes" onclick="settings()">${ico('gear')}</button></div>
+<main>${denied()?`<div class="ban">Sin avisos activados. Activalos en Ajustes del celular.<button onclick="howTo()">Cómo hacerlo</button></div>`:''}
+${S.v.length?`<div class="sum">${[['over','Vencidos'],['soon','≤30 días'],['ok','Al día']].map(([k,l])=>`<button class="sc ${c[k]?'s-'+k:'z'} ${S.f===k?'on':''}" onclick="S.f=S.f==='${k}'?null:'${k}';R()"><b class="num">${c[k]}</b><span>${l}</span></button>`).join('')}</div>`:''}
+${full?`<button class="band" onclick="S.tab='plan';R()">${S.v.length} de ${lim} vehículos · Ver plan flota →</button>`:''}
+${!S.v.length?`<div class="ctr" style="margin-top:48px"><div class="circ">${ico('car',40)}</div><h3>Cargá tu primer vehículo</h3><p class="sec" style="margin:8px 0 24px">Te avisamos antes de cada vencimiento.</p><button class="btn p" onclick="addV()">+ Agregar vehículo</button></div>`
+:shown.length?shown.map(({v,s})=>`<button class="card vc s-${s.st}" onclick="S.vid='${v.id}';S.scr='detail';R()"><div class="row sp"><span class="plate">${esc(fplate(v.plate))}</span>${chip(s.st)}</div>
+<div class="row sp" style="margin-top:12px"><div style="min-width:0"><div style="font-weight:600">${esc(v.alias||fplate(v.plate))}</div><div class="sec">${esc(v.type||'')}</div></div></div>
+<div class="row sp" style="margin-top:8px"><span class="sec row" style="color:${s.st==='over'?'var(--t)':'var(--ink2)'}">${ico(s.k?({vtv:'clip',seguro:'shield',patente:'file',service:'wrench',custom:'cal'})[s.k]:'cal',16)}${esc(dueText(v,s))}</span>${ico('chev')}</div></button>`).join(''):`<p class="sec ctr" style="margin-top:32px">No hay vehículos en este filtro.</p>`}</main>
+${S.v.length?`<button class="fab" onclick="addV()">${ico('plus')}Vehículo</button>`:''}${nav()}`}
+
+/* sheets */
+function sheet(h){ov.innerHTML=`<div class="bd" onclick="closeS()"></div><div class="sh">${h}</div>`;ov.className='on'}
+function modal(h){ov.innerHTML=`<div class="bd" onclick="closeS()"></div><div class="md">${h}</div>`;ov.className='on'}
+function closeS(){ov.className='';ov.innerHTML=''}
+let selType='Auto';
+function addV(){if(S.v.length>=LIM[plan()]){modal(`<div class="circ" style="width:64px;height:64px;margin-bottom:16px">${ico('lock',28)}</div><h3 style="margin-bottom:16px">El plan gratis llega hasta 2 vehículos</h3><button class="btn p" onclick="closeS();S.tab='plan';R()">Ver plan flota</button><button class="btn t" onclick="closeS()">Cerrar</button>`.replace('El plan gratis llega hasta 2 vehículos',plan()==='free'?'El plan gratis llega hasta 2 vehículos':`Tu plan llega hasta ${LIM[plan()]} vehículos`));return}
+  selType='Auto';vSheet(null)}
+function vSheet(v){selType=v?v.type:selType;
+  sheet(`<h3 style="margin-bottom:16px">${v?'Editar vehículo':'Nuevo vehículo'}</h3>${fld('pt','Patente','text','AB 123 CD',`autocapitalize="characters" autocomplete="off" value="${v?esc(fplate(v.plate)):''}"`)}
+${fld('al','Alias','text','Ej: Gol blanco, Moto 3',`value="${v?esc(v.alias):''}"`)}
+<div class="fld"><label>Tipo</label><div id="tp">${TYPES.map(t=>`<button class="tc ${t===selType?'on':''}" onclick="selType='${t}';document.querySelectorAll('#tp .tc').forEach(b=>b.classList.toggle('on',b.textContent==='${t}'))">${t}</button>`).join('')}</div></div>
+<button class="btn p" id="sv" onclick="saveV(${v?`'${v.id}'`:'null'})">Guardar</button>`)}
+async function saveV(id){const p=cleanPlate($('#pt').value),al=$('#al').value.trim().slice(0,40);fe('pt','');
+  if(p.length<5||p.length>8){fe('pt','Revisá la patente: tiene que tener entre 5 y 8 letras y números.');return}
+  const b=$('#sv');b.disabled=true;b.innerHTML='<span class="spin"></span>';
+  try{if(id){await vcol().doc(id).update({plate:p,alias:al,type:selType});closeS();toast('Guardado.')}
+    else{const r=await vcol().add({plate:p,alias:al,type:selType,due:{},customName:'',createdAt:firebase.firestore.FieldValue.serverTimestamp()});closeS();S.vid=r.id;S.scr='detail';R()}}
+  catch(e){toast(errMsg(e));b.disabled=false;b.textContent='Guardar'}}
+
+/* Detalle */
+function vDetail(){const v=curV();if(!v)return vPanel();const s=vs(v);
+  const rows=DUE.filter(([k])=>k!=='custom'||(v.due&&v.due.custom)).map(([k,nm,ic])=>{const d=v.due&&v.due[k],n=d?dleft(d):null,st=stOf(n),act=st==='over'||st==='soon';
+  return `<div class="card s-${st}"><div class="row"><div class="ic">${ico(ic)}</div>
+<button style="flex:1;text-align:left;min-width:0;font-weight:400" onclick="dateSheet('${k}')"><div style="font-weight:600">${esc(dname(v,k))}</div><div class="sec num">${d?fdate(d):'Sin fecha'}</div></button>
+${d?chip(st,cd(n)):chip('none','Sin fecha')}${d&&!act?`<button class="ib" aria-label="Más opciones" onclick="renewSheet('${k}')">${ico('dots')}</button>`:''}</div>
+${!d?`<button class="btn s sm" onclick="dateSheet('${k}')">Cargar fecha</button>`:act?`<button class="btn s sm" onclick="renewSheet('${k}')">Marcar como renovado</button>`:''}</div>`}).join('');
+  const nOver=DUE.filter(([k])=>v.due&&v.due[k]&&dleft(v.due[k])<0).length,nSoon=DUE.filter(([k])=>v.due&&v.due[k]&&dleft(v.due[k])>=0&&dleft(v.due[k])<=30).length;
+  const sum=[nOver?`${nOver} vencido${nOver>1?'s':''}`:'',nSoon?`${nSoon} por vencer`:''].filter(Boolean).join(' · ')||(s.st==='ok'?'Todo al día':'Sin fechas cargadas');
+  return `<div class="top"><button class="ib" aria-label="Volver" onclick="S.scr='main';R()">${ico('back')}</button><h1><span class="plate">${esc(fplate(v.plate))}</span></h1><button class="ib" aria-label="Editar" onclick="vSheet(curV())">${ico('pen')}</button></div>
+<main style="padding-bottom:32px"><h2>${esc(v.alias||fplate(v.plate))}</h2><p class="sec">${esc(v.type||'')}</p><p style="font-weight:600;color:var(--ink);margin:4px 0 16px" class="s-${s.st}"><span style="color:var(--t)">${sum}</span></p>
+${rows}${v.due&&v.due.custom?'':`<button class="btn t" onclick="dateSheet('custom')">+ Agregar vencimiento personalizado</button>`}
+<button class="btn d" style="margin-top:24px" onclick="delModal()">Eliminar vehículo</button></main>`}
+function dateSheet(k){const v=curV(),d=v.due&&v.due[k]||'';
+  sheet(`<h3 style="margin-bottom:16px">${k==='custom'?'Vencimiento personalizado':esc(dname(v,k))}</h3>${k==='custom'?fld('cn','Nombre','text','Ej: Matafuego, Extintor, Habilitación',`value="${esc(v.customName||'')}" maxlength="40"`):''}${fld('dt','Fecha de vencimiento','date','',`value="${d}"`)}<button class="btn p" onclick="saveDate('${k}',false)">Guardar</button>`)}
+function renewSheet(k){const v=curV();sheet(`<h3 style="margin-bottom:16px">¿Cuándo vence ahora?</h3><p class="sec" style="margin-bottom:12px">${esc(dname(v,k))}${k==='service'?' · poné la fecha del próximo service':''}</p>${fld('dt','Nueva fecha','date','',`value="${k==='service'?'':plusYear()}"`)}<button class="btn p" onclick="saveDate('${k}',true)">Guardar</button>`)}
+async function saveDate(k,renew){const d=$('#dt').value;fe('dt','');const cn=$('#cn');
+  if(!d){fe('dt','Elegí una fecha.');return}
+  if(cn&&!cn.value.trim()){fe('cn','Poné un nombre para el vencimiento.');return}
+  const up={['due.'+k]:d};if(cn)up.customName=cn.value.trim();
+  try{await vcol().doc(S.vid).update(up);closeS();toast(renew?'Renovado. Te avisamos 30 días antes.':'Guardado.')}catch(e){toast(errMsg(e))}}
+function delModal(){modal(`<h3 style="margin-bottom:8px">¿Eliminar este vehículo?</h3><p class="sec" style="margin-bottom:16px">Se borran también todos sus vencimientos. No se puede deshacer.</p><button class="btn r" onclick="delV()">Eliminar</button><button class="btn t" onclick="closeS()">Cancelar</button>`)}
+async function delV(){try{await vcol().doc(S.vid).delete();closeS();S.scr='main';toast('Vehículo eliminado.')}catch(e){toast(errMsg(e))}}
+
+/* Ajustes */
+function settings(){const h=(S.d&&S.d.reminderHour)??9;
+  sheet(`<h3 style="margin-bottom:16px">Ajustes</h3><div class="fld"><label for="hr">Hora de los avisos</label><select id="hr">${Array.from({length:24},(_,i)=>`<option value="${i}" ${i===h?'selected':''}>${String(i).padStart(2,'0')}:00</option>`).join('')}</select></div>
+<button class="btn p" onclick="saveHr()">Guardar</button><button class="btn d" style="margin-top:8px" onclick="closeS();auth.signOut()">Cerrar sesión</button>`)}
+async function saveHr(){try{await uref().update({reminderHour:+$('#hr').value});closeS();toast('Guardado.')}catch(e){toast(errMsg(e))}}
+
+/* Plan */
+function vPlan(){const p=plan(),n=S.v.length,lim=LIM[p],pend=S.d&&S.d.planPending;
+  const P=[['free','Gratis','Hasta 2 vehículos','Avisos a 30, 7 y 1 día'],['f5','Flota 5','Hasta 5 vehículos','Avisos a 30, 7 y 1 día'],['f15','Flota 15','Hasta 15 vehículos','Avisos a 30, 7 y 1 día']];
+  const can=S.sel==='f5'||S.sel==='f15';
+  return `<div class="top"><h1>Plan</h1></div><main style="padding-bottom:200px">
+<div class="card"><div class="row sp"><h3>${PN[p]}</h3>${p!=='free'?'<span class="chip s-ok">'+ico('ok',12)+'Activo</span>':''}</div><p class="sec num" style="margin-top:4px">${n} de ${lim} vehículos</p><div class="bar ${n>=lim?'am':''}"><i style="width:${Math.min(100,n/lim*100)}%"></i></div></div>
+${pend?`<div class="ban">Pendiente de activación. Te avisamos cuando esté listo.</div>`:''}
+<h3 style="margin:16px 0 12px">Pasá al plan flota</h3>
+${P.map(([k,nm,a,b])=>`<button class="card pl ${S.sel===k?'on':''}" ${k==='f15'&&S.sel!==k?'style="border:2px solid var(--primary);padding:15px"':''} onclick="S.sel='${k}';R()"><div class="row sp"><h2 style="font-size:24px">${nm}</h2>${p===k?'<span class="chip s-none">Tu plan</span>':k==='f15'?'<span class="chip" style="background:var(--tint);color:var(--primary)">Recomendado</span>':''}</div>
+<div class="sec">${k==='free'?'Sin costo':'Precio mensual: a definir'}</div><ul><li>✓ ${a}</li><li>✓ ${b}</li></ul></button>`).join('')}
+<p class="cap ctr" style="margin-top:24px">Próximamente: plan para talleres</p></main>
+<div class="fixb"><button class="btn p" ${can?'':'disabled'} onclick="payMP()">Pagar con Mercado Pago</button><button class="btn s" ${can?'':'disabled'} onclick="payTr()">Pagar por transferencia</button></div>${nav()}`}
+async function markPend(){try{await uref().update({planPending:S.sel})}catch(e){toast(errMsg(e))}}
+function payMP(){const l=CONFIG.mpLinks[S.sel];if(!l){toast('El link de pago todavía no está disponible. Escribinos por WhatsApp.');return}window.open(l,'_blank','noopener');markPend()}
+function payTr(){markPend();sheet(`<h3 style="margin-bottom:12px">Pagar por transferencia</h3><div class="card"><div class="cap">Alias</div><div style="font-weight:600">${esc(CONFIG.alias)}</div><div class="cap" style="margin-top:8px">CBU</div><div class="num" style="font-weight:600;word-break:break-all">${esc(CONFIG.cbu)}</div></div>
+<button class="btn s" onclick="copyTxt('${esc(CONFIG.alias)}')">Copiar alias</button><button class="btn s" style="margin-top:8px" onclick="copyTxt('${esc(CONFIG.cbu)}')">Copiar CBU</button>
+<p class="sec ctr" style="margin:16px 0 8px">Mandanos el comprobante por WhatsApp</p><button class="btn p" onclick="window.open('https://wa.me/${esc(CONFIG.whatsapp)}','_blank','noopener')">Abrir WhatsApp</button>`)}
+async function copyTxt(t){try{await navigator.clipboard.writeText(t);toast('Copiado.')}catch(e){toast('No pudimos copiar. Copialo a mano.')}}
+
+/* Admin: solo la cuenta con CONFIG.adminUid (y las reglas de Firestore lo verifican también) */
+const isAdmin=()=>S.u&&CONFIG.adminUid&&S.u.uid===CONFIG.adminUid;
+async function loadAdmin(){S.scr='admin';S.adm=null;R();
+  try{const[a,b]=await Promise.all([db.collection('users').where('planPending','in',['f5','f15']).get(),db.collection('users').where('plan','in',['f5','f15']).get()]);
+    S.adm={pend:a.docs.map(d=>({id:d.id,...d.data()})),act:b.docs.map(d=>({id:d.id,...d.data()}))}}
+  catch(e){S.adm={pend:[],act:[]};toast(errMsg(e))}
+  R()}
+function vAdmin(){const A=S.adm;
+  const row=(u,pend)=>`<div class="card"><div class="row sp"><div style="min-width:0"><div style="font-weight:600;word-break:break-all">${esc(u.email||u.id)}</div><div class="sec">${pend?'Pidió':'Plan'}: ${PN[pend?u.planPending:u.plan]}</div></div>${pend?`<button class="btn p" style="width:auto;padding:0 16px;height:44px" onclick="activate('${u.id}','${u.planPending}')">Activar</button>`:'<span class="chip s-ok">'+ico('ok',12)+'Activo</span>'}</div></div>`;
+  return `<div class="top"><button class="ib" aria-label="Volver" onclick="S.scr='main';R()">${ico('back')}</button><h1>Admin</h1></div><main>${!A?'<p class="sec ctr">Cargando…</p>':`<h3 style="margin-bottom:12px">Pendientes de activación</h3>${A.pend.length?A.pend.map(u=>row(u,1)).join(''):'<p class="sec" style="margin-bottom:16px">No hay pedidos pendientes.</p>'}<h3 style="margin:16px 0 12px">Planes activos</h3>${A.act.length?A.act.map(u=>row(u,0)).join(''):'<p class="sec">Todavía no hay planes activos.</p>'}`}</main>`}
+async function activate(id,p){try{await db.doc('users/'+id).update({plan:p,planPending:null});toast('Plan activado.');loadAdmin()}catch(e){toast(errMsg(e))}}
+</script></body></html>
