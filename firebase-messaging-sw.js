@@ -1,0 +1,10 @@
+importScripts('https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js','https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging-compat.js');
+firebase.initializeApp({
+  apiKey:"AIzaSyC8t-SM1r0_qodDghtt8uzHpo49ILcJEA0",
+  authDomain:"preskio1.firebaseapp.com",
+  projectId:"preskio1",
+  storageBucket:"preskio1.firebasestorage.app",
+  messagingSenderId:"1045929841045",
+  appId:"1:1045929841045:web:d0e215cbc21761945fa69c"
+});
+firebase.messaging();
