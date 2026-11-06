@@ -65,27 +65,8 @@ input.bad{border:1px solid var(--red)}.err{color:#B42318;font-size:12px;line-hei
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging-compat.js"></script>
+<script src="config.js"></script>
 <script>
-/* ============================================================
-   >>> ACÁ PEGÁS TUS CLAVES DE FIREBASE <<<
-   Consola Firebase > Configuración del proyecto > Tus apps > Web > firebaseConfig
-   ============================================================ */
-const CONFIG={
-  firebase:{
-    apiKey:"AIzaSyC8t-SM1r0_qodDghtt8uzHpo49ILcJEA0",
-    authDomain:"preskio1.firebaseapp.com",
-    projectId:"preskio1",
-    storageBucket:"preskio1.firebasestorage.app",
-    messagingSenderId:"1045929841045",
-    appId:"1:1045929841045:web:d0e215cbc21761945fa69c"
-  },
-    adminUid:"jWck9dJAypORiTZaPKpTPBJFBxU2",         // tu UID de Firebase (Authentication > Usuarios), para ver el panel Admin
-  vapidKey:"BOpFFLufDZNs7AZjNBlV4ixjYszOFL10CamgkMiqigsRM2wJETCFLyCR2C1_8pZdWyEIf--C3B78KK3SUbz-hJc",   // Configuración > Cloud Messaging > Certificados web push
-  whatsapp:"5491167047360",               // tu WhatsApp, con código de país, sin + ni espacios
-  alias:"Eliel.sp", cbu:"0000003100030104883205",
-  mpLinks:{f5:"",f15:""}                  // links de pago de Mercado Pago por plan
-};
-/* ============================================================ */
 firebase.initializeApp(CONFIG.firebase);
 const auth=firebase.auth(),db=firebase.firestore();
 const LIM={free:2,f5:5,f15:15},PN={free:'Gratis',f5:'Flota 5',f15:'Flota 15'};
@@ -110,7 +91,7 @@ eye:'<path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy=
 const ico=(n,s=20)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="flex:none">${I[n]}</svg>`;
 const $=s=>document.querySelector(s),ov=$('#ov');
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-let S={u:null,d:null,v:[],scr:'auth',tab:'veh',f:null,vid:null,mode:'in',sel:null,ready:false,creating:false,busy:false};
+let S={u:null,d:null,v:[],scr:'auth',tab:'veh',f:null,vid:null,mode:'in',sel:null,ready:false,creating:false,busy:false,out:false,tok:null,tokDone:false,err:false,adm:null};
 let unsubs=[];
 
 /* ---------- utilidades ---------- */
@@ -122,6 +103,8 @@ const dleft=s=>{const[y,m,d]=s.split('-').map(Number);return Math.round((new Dat
 const MES=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
 const fdate=s=>{const[y,m,d]=s.split('-').map(Number);return `${d} ${MES[m-1]} ${y}`};
 const iso=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+const dlimR=()=>{const a=todayD(),b=todayD();a.setFullYear(a.getFullYear()-5);b.setFullYear(b.getFullYear()+10);return[iso(a),iso(b)]};
+const dlim=()=>{const l=dlimR();return `min="${l[0]}" max="${l[1]}"`};
 const plusYear=()=>{const d=todayD();d.setFullYear(d.getFullYear()+1);return iso(d)};
 const stOf=n=>n==null?'none':n<0?'over':n<=30?'soon':'ok';
 const SL={over:'Vencido',soon:'Por vencer',ok:'Al día',none:'Sin fecha'};
@@ -143,20 +126,22 @@ const curV=()=>S.v.find(v=>v.id===S.vid);
 /* ---------- sesión y datos ---------- */
 auth.onAuthStateChanged(u=>{
   unsubs.forEach(f=>f());unsubs=[];S.u=u;S.d=null;S.v=[];
-  if(!u){S.scr='auth';S.ready=true;R();return}
+  if(!u){Object.assign(S,{scr:'auth',tab:'veh',f:null,vid:null,mode:'in',sel:null,adm:null,tok:null,tokDone:false,creating:false,busy:false,err:false});S.ready=true;R();return}
+  S.out=false;
   S.ready=false;R();
   unsubs.push(uref().onSnapshot(sn=>{
     if(!sn.exists){if(!S.creating)uref().set({email:u.email,plan:'free',planPending:null,reminderHour:9,permAsked:true,fcmTokens:[]}).catch(e=>toast(errMsg(e)));return}
-    S.d=sn.data();S.ready=true;
+    S.d=sn.data();S.ready=true;S.err=false;if(!S.tokDone){S.tokDone=true;registerToken()}
     if(S.d.permAsked===false&&S.scr!=='detail')S.scr='perm';
     else if(S.scr==='auth'||(S.scr==='perm'&&S.d.permAsked!==false))S.scr='main';
-    R()},e=>{S.ready=true;toast(errMsg(e));R()}));
-  unsubs.push(vcol().onSnapshot(sn=>{S.v=sn.docs.map(d=>({id:d.id,...d.data()}));if(S.scr==='detail'&&!curV())S.scr='main';R()},e=>toast(errMsg(e))));
+    R()},e=>{if(S.out)return;S.ready=true;S.err=true;R()}));
+  unsubs.push(vcol().onSnapshot(sn=>{S.v=sn.docs.map(d=>({id:d.id,...d.data()}));if(S.scr==='detail'&&!curV())S.scr='main';R()},e=>{if(!S.out)toast(errMsg(e))}));
 });
 
 /* ---------- render ---------- */
 function R(){const a=$('#app');
   if(!S.ready){a.innerHTML='<div class="ld">Cargando…</div>';return}
+  if(S.err){a.innerHTML=vErr();return}
   a.innerHTML=S.scr==='auth'?vAuth():S.scr==='perm'?vPerm():S.scr==='detail'?vDetail():S.scr==='admin'?vAdmin():S.tab==='plan'?vPlan():vPanel()}
 const nav=()=>`<nav class="nav"><button class="${S.tab==='veh'?'on':''}" onclick="S.tab='veh';R()">${ico('car',24)}Vehículos</button><button class="${S.tab==='plan'?'on':''}" onclick="S.tab='plan';R()">${ico('chk',24)}Plan</button></nav>`;
 
@@ -181,7 +166,9 @@ async function doAuth(ev){ev.preventDefault();if(S.busy)return false;
   if(!ok)return false;
   S.busy=true;const b=$('#go');b.disabled=true;b.innerHTML='<span class="spin"></span>';
   try{if(up){S.creating=true;const c=await auth.createUserWithEmailAndPassword(em,pw);
-      await db.doc('users/'+c.user.uid).set({email:em,plan:'free',planPending:null,reminderHour:9,permAsked:false,fcmTokens:[]});S.creating=false}
+      const base={email:em,plan:'free',planPending:null,reminderHour:9,permAsked:false,fcmTokens:[]},ref=db.doc('users/'+c.user.uid);
+      try{await ref.set(base)}catch(e1){try{await ref.set(base)}catch(e2){S.creating=false;S.busy=false;toast('Se creó la cuenta pero no pudimos terminar. Ingresá de nuevo.');await auth.signOut();return false}}
+      S.creating=false}
     else await auth.signInWithEmailAndPassword(em,pw)}
   catch(e){S.creating=false;const m=errMsg(e);fe(e.code==='auth/email-already-in-use'||e.code==='auth/invalid-email'?'em':'pw',m);
     b.disabled=false;b.textContent=up?'Crear cuenta gratis':'Ingresar'}
@@ -194,14 +181,20 @@ function vPerm(){return `<div class="top" style="background:none;border:0;justif
 <div class="pad ctr"><div class="circ">${ico('bell',40)}</div><h2>Que el celu te avise por vos</h2><p class="sec" style="margin:8px 0 24px">Te mandamos un aviso 30, 7 y 1 día antes de cada vencimiento.</p>
 <div style="text-align:left">${[['30 días antes: tiempo de sobra'],['7 días antes: hora de sacar turno'],['1 día antes: último aviso']].map(r=>`<div class="row card" style="padding:12px">${ico('bell')}<span>${r[0]}</span></div>`).join('')}</div></div>
 <div style="padding:16px"><button class="btn p" onclick="askNotif(true)">Activar avisos</button></div>`}
+async function registerToken(){try{
+  if(!('Notification'in window)||Notification.permission!=='granted'||!await firebase.messaging.isSupported())return false;
+  const reg=await navigator.serviceWorker.register('firebase-messaging-sw.js');
+  const t=await firebase.messaging().getToken({vapidKey:CONFIG.vapidKey,serviceWorkerRegistration:reg});
+  S.tok=t;if(!((S.d&&S.d.fcmTokens)||[]).includes(t))await uref().update({fcmTokens:firebase.firestore.FieldValue.arrayUnion(t)});
+  return true}catch(e){return false}}
 async function askNotif(yes){
   try{if(yes){if(!('Notification'in window))toast('Este navegador no permite avisos. Probá desde Chrome o Safari instalada en la pantalla de inicio.');
-    else{const p=await Notification.requestPermission();
-      if(p==='granted'&&await firebase.messaging.isSupported()){const reg=await navigator.serviceWorker.register('firebase-messaging-sw.js');
-        const t=await firebase.messaging().getToken({vapidKey:CONFIG.vapidKey,serviceWorkerRegistration:reg});
-        await uref().update({fcmTokens:firebase.firestore.FieldValue.arrayUnion(t)})}}}
-  }catch(e){toast('No pudimos activar los avisos. Probá de nuevo desde Ajustes del celular.')}
+    else{const p=await Notification.requestPermission();if(p==='granted'&&!await registerToken())toast('No pudimos activar los avisos. Probá de nuevo desde Ajustes del celular.')}}}catch(e){toast('No pudimos activar los avisos. Probá de nuevo desde Ajustes del celular.')}
   try{await uref().update({permAsked:true})}catch(e){S.scr='main';R()}}
+const vErr=()=>`<div class="pad ctr" style="display:flex;flex-direction:column;justify-content:center"><div class="circ">${ico('over',40)}</div><h3>No pudimos cargar tu cuenta</h3><p class="sec" style="margin:8px 0 24px">Revisá tu conexión y probá de nuevo.</p><button class="btn p" onclick="location.reload()">Reintentar</button><button class="btn t" onclick="logout()">Cerrar sesión</button></div>`;
+async function logout(){closeS();S.out=true;unsubs.forEach(f=>f());unsubs=[];
+  try{if(S.tok){await firebase.messaging().deleteToken();await uref().update({fcmTokens:firebase.firestore.FieldValue.arrayRemove(S.tok)})}}catch(e){}
+  await auth.signOut()}
 const denied=()=>'Notification'in window&&Notification.permission==='denied';
 function howTo(){sheet(`<h3>Cómo activar los avisos</h3><p class="sec" style="margin:8px 0 16px">Abrí los Ajustes del celular, buscá este navegador o app, entrá en Notificaciones y activalas. Después volvé y recargá la página.</p><button class="btn p" onclick="closeS()">Entendido</button>`)}
 
@@ -235,6 +228,7 @@ ${fld('al','Alias','text','Ej: Gol blanco, Moto 3',`value="${v?esc(v.alias):''}"
 <button class="btn p" id="sv" onclick="saveV(${v?`'${v.id}'`:'null'})">Guardar</button>`)}
 async function saveV(id){const p=cleanPlate($('#pt').value),al=$('#al').value.trim().slice(0,40);fe('pt','');
   if(p.length<5||p.length>8){fe('pt','Revisá la patente: tiene que tener entre 5 y 8 letras y números.');return}
+  if(S.v.some(x=>x.plate===p&&x.id!==id)){fe('pt','Ya cargaste un vehículo con esa patente.');return}
   const b=$('#sv');b.disabled=true;b.innerHTML='<span class="spin"></span>';
   try{if(id){await vcol().doc(id).update({plate:p,alias:al,type:selType});closeS();toast('Guardado.')}
     else{const r=await vcol().add({plate:p,alias:al,type:selType,due:{},customName:'',createdAt:firebase.firestore.FieldValue.serverTimestamp()});closeS();S.vid=r.id;S.scr='detail';R()}}
@@ -254,10 +248,11 @@ ${!d?`<button class="btn s sm" onclick="dateSheet('${k}')">Cargar fecha</button>
 ${rows}${v.due&&v.due.custom?'':`<button class="btn t" onclick="dateSheet('custom')">+ Agregar vencimiento personalizado</button>`}
 <button class="btn d" style="margin-top:24px" onclick="delModal()">Eliminar vehículo</button></main>`}
 function dateSheet(k){const v=curV(),d=v.due&&v.due[k]||'';
-  sheet(`<h3 style="margin-bottom:16px">${k==='custom'?'Vencimiento personalizado':esc(dname(v,k))}</h3>${k==='custom'?fld('cn','Nombre','text','Ej: Matafuego, Extintor, Habilitación',`value="${esc(v.customName||'')}" maxlength="40"`):''}${fld('dt','Fecha de vencimiento','date','',`value="${d}"`)}<button class="btn p" onclick="saveDate('${k}',false)">Guardar</button>`)}
-function renewSheet(k){const v=curV();sheet(`<h3 style="margin-bottom:16px">¿Cuándo vence ahora?</h3><p class="sec" style="margin-bottom:12px">${esc(dname(v,k))}${k==='service'?' · poné la fecha del próximo service':''}</p>${fld('dt','Nueva fecha','date','',`value="${k==='service'?'':plusYear()}"`)}<button class="btn p" onclick="saveDate('${k}',true)">Guardar</button>`)}
+  sheet(`<h3 style="margin-bottom:16px">${k==='custom'?'Vencimiento personalizado':esc(dname(v,k))}</h3>${k==='custom'?fld('cn','Nombre','text','Ej: Matafuego, Extintor, Habilitación',`value="${esc(v.customName||'')}" maxlength="40"`):''}${fld('dt','Fecha de vencimiento','date','',`value="${esc(d)}" ${dlim()}`)}<button class="btn p" onclick="saveDate('${k}',false)">Guardar</button>`)}
+function renewSheet(k){const v=curV();sheet(`<h3 style="margin-bottom:16px">¿Cuándo vence ahora?</h3><p class="sec" style="margin-bottom:12px">${esc(dname(v,k))}${k==='service'?' · poné la fecha del próximo service':''}</p>${fld('dt','Nueva fecha','date','',`value="${k==='service'?'':plusYear()}" ${dlim()}`)}<button class="btn p" onclick="saveDate('${k}',true)">Guardar</button>`)}
 async function saveDate(k,renew){const d=$('#dt').value;fe('dt','');const cn=$('#cn');
   if(!d){fe('dt','Elegí una fecha.');return}
+  const L=dlimR();if(d<L[0]||d>L[1]){fe('dt','Revisá la fecha: tiene que ser de un año razonable.');return}
   if(cn&&!cn.value.trim()){fe('cn','Poné un nombre para el vencimiento.');return}
   const up={['due.'+k]:d};if(cn)up.customName=cn.value.trim();
   try{await vcol().doc(S.vid).update(up);closeS();toast(renew?'Renovado. Te avisamos 30 días antes.':'Guardado.')}catch(e){toast(errMsg(e))}}
@@ -267,13 +262,13 @@ async function delV(){try{await vcol().doc(S.vid).delete();closeS();S.scr='main'
 /* Ajustes */
 function settings(){const h=(S.d&&S.d.reminderHour)??9;
   sheet(`<h3 style="margin-bottom:16px">Ajustes</h3><div class="fld"><label for="hr">Hora de los avisos</label><select id="hr">${Array.from({length:24},(_,i)=>`<option value="${i}" ${i===h?'selected':''}>${String(i).padStart(2,'0')}:00</option>`).join('')}</select></div>
-<button class="btn p" onclick="saveHr()">Guardar</button><button class="btn d" style="margin-top:8px" onclick="closeS();auth.signOut()">Cerrar sesión</button>`)}
+<button class="btn p" onclick="saveHr()">Guardar</button><button class="btn d" style="margin-top:8px" onclick="logout()">Cerrar sesión</button>`)}
 async function saveHr(){try{await uref().update({reminderHour:+$('#hr').value});closeS();toast('Guardado.')}catch(e){toast(errMsg(e))}}
 
 /* Plan */
 function vPlan(){const p=plan(),n=S.v.length,lim=LIM[p],pend=S.d&&S.d.planPending;
   const P=[['free','Gratis','Hasta 2 vehículos','Avisos a 30, 7 y 1 día'],['f5','Flota 5','Hasta 5 vehículos','Avisos a 30, 7 y 1 día'],['f15','Flota 15','Hasta 15 vehículos','Avisos a 30, 7 y 1 día']];
-  const can=S.sel==='f5'||S.sel==='f15';
+  const can=(S.sel==='f5'||S.sel==='f15')&&LIM[S.sel]>LIM[p];
   return `<div class="top"><h1>Plan</h1></div><main style="padding-bottom:200px">
 <div class="card"><div class="row sp"><h3>${PN[p]}</h3>${p!=='free'?'<span class="chip s-ok">'+ico('ok',12)+'Activo</span>':''}</div><p class="sec num" style="margin-top:4px">${n} de ${lim} vehículos</p><div class="bar ${n>=lim?'am':''}"><i style="width:${Math.min(100,n/lim*100)}%"></i></div></div>
 ${pend?`<div class="ban">Pendiente de activación. Te avisamos cuando esté listo.</div>`:''}
@@ -281,12 +276,13 @@ ${pend?`<div class="ban">Pendiente de activación. Te avisamos cuando esté list
 ${P.map(([k,nm,a,b])=>`<button class="card pl ${S.sel===k?'on':''}" ${k==='f15'&&S.sel!==k?'style="border:2px solid var(--primary);padding:15px"':''} onclick="S.sel='${k}';R()"><div class="row sp"><h2 style="font-size:24px">${nm}</h2>${p===k?'<span class="chip s-none">Tu plan</span>':k==='f15'?'<span class="chip" style="background:var(--tint);color:var(--primary)">Recomendado</span>':''}</div>
 <div class="sec">${k==='free'?'Sin costo':'Precio mensual: a definir'}</div><ul><li>✓ ${a}</li><li>✓ ${b}</li></ul></button>`).join('')}
 <p class="cap ctr" style="margin-top:24px">Próximamente: plan para talleres</p></main>
-<div class="fixb"><button class="btn p" ${can?'':'disabled'} onclick="payMP()">Pagar con Mercado Pago</button><button class="btn s" ${can?'':'disabled'} onclick="payTr()">Pagar por transferencia</button></div>${nav()}`}
-async function markPend(){try{await uref().update({planPending:S.sel})}catch(e){toast(errMsg(e))}}
-function payMP(){const l=CONFIG.mpLinks[S.sel];if(!l){toast('El link de pago todavía no está disponible. Escribinos por WhatsApp.');return}window.open(l,'_blank','noopener');markPend()}
-function payTr(){markPend();sheet(`<h3 style="margin-bottom:12px">Pagar por transferencia</h3><div class="card"><div class="cap">Alias</div><div style="font-weight:600">${esc(CONFIG.alias)}</div><div class="cap" style="margin-top:8px">CBU</div><div class="num" style="font-weight:600;word-break:break-all">${esc(CONFIG.cbu)}</div></div>
+<div class="fixb"><button class="btn p" ${can?'':'disabled'} onclick="payMP()">Pagar con Mercado Pago</button>${trOk()?`<button class="btn s" ${can?'':'disabled'} onclick="payTr()">Pagar por transferencia</button>`:''}</div>${nav()}`}
+const trOk=()=>CONFIG.alias!=='TU.ALIAS.AQUI'&&!/^0+$/.test(CONFIG.cbu)&&CONFIG.whatsapp!=='5491100000000';
+async function markPend(){if(S.d&&S.d.planPending===S.sel)return;try{await uref().update({planPending:S.sel})}catch(e){toast(errMsg(e))}}
+function payMP(){const l=CONFIG.mpLinks[S.sel];if(!l){toast('El link de pago todavía no está disponible. Escribinos por WhatsApp.');return}const w=window.open(l,'_blank');if(w){w.opener=null;markPend()}else toast('Tu navegador bloqueó la ventana de pago. Permitila y probá de nuevo.')}
+function payTr(){sheet(`<h3 style="margin-bottom:12px">Pagar por transferencia</h3><div class="card"><div class="cap">Alias</div><div style="font-weight:600">${esc(CONFIG.alias)}</div><div class="cap" style="margin-top:8px">CBU</div><div class="num" style="font-weight:600;word-break:break-all">${esc(CONFIG.cbu)}</div></div>
 <button class="btn s" onclick="copyTxt('${esc(CONFIG.alias)}')">Copiar alias</button><button class="btn s" style="margin-top:8px" onclick="copyTxt('${esc(CONFIG.cbu)}')">Copiar CBU</button>
-<p class="sec ctr" style="margin:16px 0 8px">Mandanos el comprobante por WhatsApp</p><button class="btn p" onclick="window.open('https://wa.me/${esc(CONFIG.whatsapp)}','_blank','noopener')">Abrir WhatsApp</button>`)}
+<p class="sec ctr" style="margin:16px 0 8px">Mandanos el comprobante por WhatsApp</p><button class="btn p" onclick="markPend();window.open('https://wa.me/${esc(CONFIG.whatsapp)}','_blank')">Abrir WhatsApp</button>`)}
 async function copyTxt(t){try{await navigator.clipboard.writeText(t);toast('Copiado.')}catch(e){toast('No pudimos copiar. Copialo a mano.')}}
 
 /* Admin: solo la cuenta con CONFIG.adminUid (y las reglas de Firestore lo verifican también) */
